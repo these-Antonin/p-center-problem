@@ -17,7 +17,7 @@ def main():
     # if it is the capacitated version, add the argument
     parser.add_argument('--capacitated', action='store_true', help='If set, the solver will handle capacitated p-center problem instances.')
     parser.add_argument('--failure', nargs='?', default=None, help='If set, the solver will handle p-center problem instances with failure foresight.')
-    parser.add_argument('--stratified', nargs='?', default=None, help='If set, the solver will handle p-center problem instances with failure foresight.')
+    parser.add_argument('--stratified', nargs='?', default=None, help='If set, the solver will handle p-center problem instances with stratification.')
     args = parser.parse_args()
     
     if args.file:
@@ -31,6 +31,12 @@ def main():
         alpha = float(args.failure)
         if alpha < 0 or alpha > 1:
             print("Error: alpha must be between 0 and 1.")
+            sys.exit(1)
+
+    if args.stratified:
+        fonction = args.stratified
+        if fonction not in ["A", "B", "AB"]:
+            print("Error: fonction must be 'A', 'B' or 'AB'.")
             sys.exit(1)
 
     # Instance reading
@@ -50,9 +56,10 @@ def main():
         # If the instance is stratified, read the stratified instance
         is_stratified = True
         model_class = "stratified"
+        print("Warning: Stratified model is experimental and may not work as expected.")
     
         
-    instance_data = read_instance(file_path, capacitated=is_capacitated, failure=is_failure, alpha=alpha, stratified=is_stratified)
+    instance_data = read_instance(file_path, capacitated=is_capacitated, failure=is_failure, alpha=alpha, stratified=is_stratified, fonction=fonction)
 
     # Problem solving
     solution = solve(instance_data, model_class=model_class)
