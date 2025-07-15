@@ -12,7 +12,10 @@ p-center-problem
 │   │   ├── display_instance.py
 │   │   └── generate_instance.py
 │   ├── models
-│   │   └── classical.py
+│   │   ├── capacitated.py
+│   │   ├── classical
+│   │   ├── failure.py
+│   │   └── stratified.py
 │   └── solver
 │       └── solve.py
 ├── instances
@@ -81,6 +84,24 @@ python -m src.main <instance path> --failure <alpha>
 ```
 where \<alpha\> is a float in [0,1]
 
+#### Stratified model
+
+The **stratified p-center problem** is a variant of the classical p-center problem that accounts for the heterogeneity of the population by introducing **strata**—subgroups defined by specific characteristics such as age groups, service levels, or geographic priorities.
+
+Instead of optimizing coverage globally, the objective here is to **ensure good coverage within each stratum**. This is particularly useful when different segments of the population have **distinct service requirements**.
+
+**How it works:**
+- Each **stratum** corresponds to an **induced subgraph** of a larger, shared base graph. That is, all strata rely on the **same distance matrix and network structure**, but consider only a subset of nodes (clients and eligible centers) relevant to that stratum.
+- Despite being defined separately, **center placement is shared across all strata**: opening a center in one stratum means it is opened in **every stratum**. This creates **dependencies between strata**, and the optimization must consider the **overlapping and sometimes conflicting needs** of each subgroup.
+- The model also incorporates **failure tolerance** by assigning both a **primary** and a **backup** center to each client. As a result, **at least two centers must be opened per stratum** to ensure fallback service.
+
+To test the version with failure foresight, you can run:
+```
+python -m src.main <instance path> --stratified <function>
+```
+where \<function\> is a string in ["A", "B", "AB"].
+
+**Note**: The instance file must include stratification data, such as which clients and centers belong to which stratum.
 
 ### Instance Generator
 This project includes a parameterizable generator for synthetic p-center problem instances.

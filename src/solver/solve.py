@@ -2,6 +2,7 @@ from gurobipy import GRB
 from ..models.classical import classical_model
 from ..models.capacitated import capacitated_model
 from ..models.failure import failure_model
+from ..models.stratified import stratified_model, variables_unmapping, compute_objective
 
 def solve(instance_data, model_class):
     """Solve the p-center problem using the specified model class.
@@ -25,6 +26,9 @@ def solve(instance_data, model_class):
             model, x, y = capacitated_model(instance_data)
         elif model_class == 'failure':
             model, x, w, y = failure_model(instance_data)
+        elif model_class == 'stratified':
+            model, x, w, y, A, B = stratified_model(instance_data)
+            num_strata = instance_data['num_strata']
         else:
             raise ValueError(f"Unknown model_class: {model_class}")
 
@@ -48,7 +52,15 @@ def solve(instance_data, model_class):
                     'primary_assignments': {i: j for i in range(num_nodes) for j in range(num_nodes) if x[i, j].X > 0.5},
                     'backup_assignments': {i: j for i in range(num_nodes) for j in range(num_nodes) if w[i, j].X > 0.5}
                 }
-        
+            elif model_class == 'stratified':
+                unmapped_x, unmapped_w = variables_unmapping(instance_data, x, w)
+                solution = {
+                    'objective_value': compute_objective(instance_data['fonction'], A, B, num_strata),
+                    'gurobi_status': model.status,
+                    'centers': [j for j in range(num_nodes) if y[j].x > 0.5],
+                    'primary_assignments': {(s,i) : j for s in range(num_strata) for j in range(num_nodes) for i in range(num_nodes) if unmapped_x[s,j,i] > 0.5},
+                    'backup_assignments': {(s,i) : j for s in range(num_strata) for j in range(num_nodes) for i in range(num_nodes) if unmapped_w[s,j,i] > 0.5}
+                }
         else:
             solution = {
                 'objective_value': None,
