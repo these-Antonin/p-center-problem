@@ -73,7 +73,7 @@ def variables_unmapping(instance_data, x, w):
                     
     return x_unmapped, w_unmapped
 
-def createModel_surcharge(instance_data):
+def stratified_model(instance_data):
 
     # Extract data
     distances = instance_data['distances']
