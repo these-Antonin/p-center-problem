@@ -2,7 +2,8 @@ from gurobipy import GRB
 from ..models.classical import classical_model
 from ..models.capacitated import capacitated_model
 from ..models.failure import failure_model
-from ..models.stratified import stratified_model, variables_unmapping, compute_objective
+from ..models.stratified import stratified_model
+from ..models.stratified_utils import variables_mapping, variables_unmapping, compute_objective
 
 def solve(instance_data, model_class):
     """Solve the p-center problem using the specified model class.

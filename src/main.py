@@ -8,6 +8,11 @@ from src.io_utils.display_solution import display_solution
 from src.solver.solve import solve
 import sys
 
+from src.models.stratified import stratified_with_p_knowing_center_model
+from src.models.stratified_utils import compute_objective, variables_unmapping
+import numpy as np
+from gurobipy import GRB
+
 def main():
 
     # If there is an argument, use it as the instance file path
@@ -69,6 +74,45 @@ def main():
     
     # Solution display
     display_solution(solution)
+
+    if is_stratified and True:
+        # take randomly p centers from the nnodes, return a list of booleans of length num_nodes
+
+        num_centers = instance_data['num_centers']
+        num_nodes = instance_data['num_nodes']
+        centers = [False] * num_nodes
+
+        # Randomly select p centers
+        import random
+        selected_centers = random.sample(range(num_nodes), num_centers)
+        for center in selected_centers:
+            centers[center] = True
+
+        print(f"Selected centers: {selected_centers}")
+
+        # Create the stratified model with the known centers
+        model, x, w, y, A, B = stratified_with_p_knowing_center_model(instance_data, centers)
+        
+        model.optimize()
+
+        if model.status == GRB.OPTIMAL or model.status == GRB.SUBOPTIMAL:
+            unmapped_x, unmapped_w = variables_unmapping(instance_data, x, w)
+            objective_value = compute_objective(instance_data['fonction'], A, B, instance_data['num_strata'])
+            print(f"Objective value: {objective_value}")
+            print(f"Centers: {[j for j in range(num_nodes) if y[j].x > 0.5]}")
+            print("Primary assignments:")
+            for s in range(instance_data['num_strata']):
+                for i in range(num_nodes):
+                    for j in range(num_nodes):
+                        if unmapped_x[s, i, j] > 0.5:
+                            print(f"Stratum {s}, Center {i}, Client {j}")
+            print("Backup assignments:")
+            for s in range(instance_data['num_strata']):
+                for i in range(num_nodes):
+                    for j in range(num_nodes):
+                        if unmapped_w[s, i, j] > 0.5:
+                            print(f"Stratum {s}, Center {i}, Client {j}")
+        
     
 if __name__ == "__main__":
     main()
