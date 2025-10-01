@@ -38,6 +38,7 @@ def main():
             print("Error: alpha must be between 0 and 1.")
             sys.exit(1)
 
+    fonction = None
     if args.stratified:
         fonction = args.stratified
         if fonction not in ["A", "B", "AB"]:
